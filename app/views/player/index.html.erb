@@ -1,0 +1,13 @@
+<h1>Liste des joueurs</h1>
+
+<% if @players.any? %>
+  <ul>
+    <% @players.each do |player| %>
+      <li><%= player.name %></li>
+    <% end %>
+  </ul>
+<% else %>
+  <p>Aucun joueur disponible.</p>
+<% end %>
+
+<%= link_to "Ajouter un joueur", new_player_path, class: "btn btn-secondary" %>

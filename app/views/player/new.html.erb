@@ -1,0 +1,10 @@
+<h1>Ajouter un joueur</h1>
+
+<%= form_with model: @player, local: true do |f| %>
+  <div>
+    <%= f.label :name, "Nom du joueur" %>
+    <%= f.text_field :name, required: true %>
+  </div>
+  <%= f.submit "Ajouter", class: "btn btn-primary" %>
+<% end %>
+
