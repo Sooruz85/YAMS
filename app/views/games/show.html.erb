@@ -1,0 +1,39 @@
+<h1>Jeu de Yams</h1>
+
+<div id="dice-container">
+  <% @dice.each_with_index do |die, index| %>
+    <div class="die" id="die-<%= index %>">
+      <p><%= die %></p>
+    </div>
+  <% end %>
+</div>
+
+<button id="roll-dice" class="btn btn-primary">Lancer les dés</button>
+
+<div style="margin-top: 20px;">
+  <%= link_to "Retour à l'accueil", root_path, class: "btn btn-secondary" %>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const rollDiceButton = document.getElementById("roll-dice");
+    const diceContainer = document.getElementById("dice-container");
+
+    rollDiceButton.addEventListener("click", () => {
+      fetch("<%= roll_dice_game_path(params[:id]) %>", { method: "POST" })
+        .then(response => response.json())
+        .then(data => {
+          const dice = data.dice;
+          diceContainer.innerHTML = ""; // Vide le conteneur actuel
+          dice.forEach((value, index) => {
+            // Ajoute chaque dé avec le nouveau résultat
+            const dieDiv = document.createElement("div");
+            dieDiv.classList.add("die");
+            dieDiv.id = `die-${index}`;
+            dieDiv.innerHTML = `<p>${value}</p>`;
+            diceContainer.appendChild(dieDiv);
+          });
+        });
+    });
+  });
+</script>

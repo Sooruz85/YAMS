@@ -6,10 +6,14 @@ Rails.application.routes.draw do
   resources :players, only: [:new, :create, :index]
 
   # Gestion du jeu
-  resources :games, only: [:new, :create] do
+  resources :games, only: [:new, :create, :show] do
     collection do
       get :tutorial   # Route pour afficher le tutoriel
       get :end        # Route pour afficher l'écran de fin de partie
+    end
+
+    member do
+      post :roll_dice # Action pour lancer les dés
     end
   end
 end
