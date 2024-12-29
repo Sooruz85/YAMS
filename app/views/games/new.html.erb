@@ -1,0 +1,13 @@
+<h1>Nouvelle Partie</h1>
+<p>Veuillez entrer entre 2 et 4 joueurs pour démarrer la partie.</p>
+
+<%= form_with url: games_path, method: :post, local: true do %>
+  <% @players.each_with_index do |player, index| %>
+    <div>
+      <%= label_tag "players[#{index}]", "Nom du joueur #{index + 1}" %>
+      <%= text_field_tag "players[#{index}]", nil, placeholder: "Nom ou pseudo", required: false %>
+    </div>
+  <% end %>
+
+  <%= submit_tag "Commencer la partie", class: "btn btn-primary" %>
+<% end %>

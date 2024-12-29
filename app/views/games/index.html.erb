@@ -1,0 +1,9 @@
+<h1>Partie en cours</h1>
+
+<ul>
+  <% Player.all.each do |player| %>
+    <li><%= player.name %></li>
+  <% end %>
+</ul>
+
+<%= link_to "Retour à l'accueil", root_path, class: "btn btn-secondary" %>

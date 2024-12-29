@@ -1,12 +1,15 @@
 Rails.application.routes.draw do
-  get 'games/home'
-  get 'games/tutorial'
-  root "games#home" # Écran d'accueil
+  # Page d'accueil
+  root "games#home"
+
+  # Gestion des joueurs
   resources :players, only: [:new, :create, :index]
-  resources :games, only: [:index, :show, :create] do
+
+  # Gestion du jeu
+  resources :games, only: [:new, :create] do
     collection do
-      get :tutorial # Route pour le tutoriel
-      get :end # Route pour l'écran de fin
+      get :tutorial   # Route pour afficher le tutoriel
+      get :end        # Route pour afficher l'écran de fin de partie
     end
   end
 end
