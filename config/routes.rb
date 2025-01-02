@@ -13,7 +13,8 @@ Rails.application.routes.draw do
     end
 
     member do
-      post :roll_dice # Action pour lancer les dés
+      post :roll_dice    # Action pour lancer les dés
+      post :next_player  # Action pour passer au joueur suivant
     end
   end
 end

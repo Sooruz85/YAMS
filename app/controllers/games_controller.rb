@@ -1,4 +1,8 @@
 class GamesController < ApplicationController
+
+  # Désactive la vérification CSRF uniquement pour l'action roll_dice
+  protect_from_forgery with: :null_session, only: [:roll_dice]
+
   def home
     # Logique pour la page d'accueil
   end
@@ -28,16 +32,62 @@ class GamesController < ApplicationController
     end
   end
 
-
-
   def show
-    @dice = Array.new(5) { rand(1..6) } # Initialise 5 dés avec des valeurs aléatoires
+    @game = Game.find(params[:id])
+    @dice = Array.new(5) { rand(1..6) } # Initialise 5 dés
+    @players = @game.players            # Récupère les joueurs
+    @current_player_index = session[:current_player_index] || 0 # Suivi du joueur actif
+    @roll_count = session[:roll_count] || 0                     # Nombre de lancers effectués
+  end
+  def roll_dice
+    @game = Game.find(params[:id])
+
+    # Récupère les indices des dés bloqués depuis les paramètres
+    kept_dice_indices = params[:kept_dice] || []
+    kept_dice_indices = kept_dice_indices.map(&:to_i)
+
+    # Maintient les dés bloqués et relance les autres
+    dice = session[:current_dice] || Array.new(5) { rand(1..6) }
+    dice.each_with_index do |_, index|
+      dice[index] = rand(1..6) unless kept_dice_indices.include?(index)
+    end
+    session[:current_dice] = dice
+
+    # Gestion des tours
+    session[:roll_count] ||= 0
+    session[:current_player_index] ||= 0
+    session[:roll_count] += 1
+
+    if session[:roll_count] >= 3
+      session[:roll_count] = 0
+      session[:current_player_index] = (session[:current_player_index] + 1) % @game.players.count
+    end
+
+    current_player = @game.players[session[:current_player_index]]
+
+    render json: {
+      dice: dice,
+      roll_count: session[:roll_count],
+      current_player_name: current_player.name,
+      kept_dice: kept_dice_indices
+    }
   end
 
-  def roll_dice
-    @dice = Array.new(5) { rand(1..6) } # Génère de nouveaux résultats pour les dés
-    render json: { dice: @dice }        # Retourne les résultats en JSON pour un rafraîchissement dynamique
+  def next_player
+    @game = Game.find(params[:id])
+
+    # Met à jour l'index du joueur actuel
+    session[:current_player_index] ||= 0
+    session[:current_player_index] = (session[:current_player_index] + 1) % @game.players.count
+
+    # Récupère le nouveau joueur actuel
+    current_player = @game.players[session[:current_player_index]]
+
+    render json: { current_player_name: current_player.name }, status: :ok
   end
+
+
+
 
   def tutorial
     # Logique pour le tutoriel

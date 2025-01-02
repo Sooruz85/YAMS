@@ -32,3 +32,8 @@
   font-size: 20px;
   font-weight: bold;
 }
+
+.btn:disabled {
+  background-color: green;
+  cursor: not-allowed;
+}

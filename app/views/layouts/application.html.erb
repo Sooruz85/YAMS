@@ -1,15 +1,50 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>YamsGame</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <%= csrf_meta_tags %>
-    <%= csp_meta_tag %>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= yield :title || "Mon Site Bootstrap" %></title>
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
 
-    <%= stylesheet_link_tag "application" %>
-  </head>
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-EPsQih8Nx+K+6pPBVlh+KwhT4tr2odaiPxjWkdjh9ANaU9zB2U58F5kkS5G+l/Iq"
+    crossorigin="anonymous"
+  />
+  <style>
+    body {
+      background-image: url('<%= asset_path("background.jpg") %>'); /* Image locale */
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
 
-  <body>
+    .content-wrapper {
+      max-width: 960px;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="container content-wrapper">
     <%= yield %>
-  </body>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-Q3Aw63M7wG6pLCY+VHsGLGnl6FJcOGUhvWt+dQ9IrjO06w7odL4GR20CxZ+R3Hd8"
+    crossorigin="anonymous"
+  ></script>
+</body>
 </html>
