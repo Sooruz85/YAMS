@@ -49,9 +49,9 @@
 
     <!-- Dice Container -->
     <div id="dice-container" class="d-flex justify-content-center flex-wrap mb-4">
-      <% @dice.each_with_index do |die, index| %>
+      <% 5.times do |index| %>
         <div class="die m-2 text-center border rounded p-3 shadow-sm">
-          <p class="fs-3"><%= die %></p>
+          <p class="fs-3" id="die-<%= index %>">0</p>
           <label>
             <input type="checkbox" class="keep-die" data-index="<%= index %>">
             Garder
@@ -64,6 +64,44 @@
     <div id="button-container" class="text-center">
       <button id="roll-dice" class="btn btn-primary btn-lg me-3">Lancer les dés</button>
       <button id="next-player" class="btn btn-success btn-lg" disabled>Joueur suivant</button>
+    </div>
+
+    <!-- Score Modal -->
+    <div class="modal fade" id="scoreModal" tabindex="-1" aria-labelledby="scoreModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="scoreModalLabel">Tableau des Scores</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="score-form">
+              <table class="table table-bordered text-center">
+                <thead>
+                  <tr>
+                    <th>Combinaison</th>
+                    <th>Choix</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @combinations.each do |combination, used| %>
+                    <tr>
+                      <td><%= combination.capitalize %></td>
+                      <td>
+                        <input type="radio" name="score" value="<%= combination %>" <%= "disabled" if used %>>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            <button type="button" id="submit-score" class="btn btn-primary">Valider</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Back to Home -->
@@ -80,9 +118,16 @@
       const currentPlayer = document.getElementById("current-player");
       const rollCount = document.getElementById("roll-count");
 
-      rollDiceButton.addEventListener("click", () => {
-        console.log("Bouton 'Lancer les dés' cliqué.");
+      function resetDiceToZero() {
+        Array.from(document.querySelectorAll(".die p")).forEach(die => {
+          die.textContent = "0";
+        });
+        document.querySelectorAll(".keep-die").forEach(checkbox => {
+          checkbox.checked = false;
+        });
+      }
 
+      rollDiceButton.addEventListener("click", () => {
         const keptDiceIndices = Array.from(document.querySelectorAll(".keep-die:checked"))
           .map(checkbox => parseInt(checkbox.dataset.index));
 
@@ -94,82 +139,58 @@
           },
           body: JSON.stringify({ kept_dice: keptDiceIndices })
         })
-          .then(response => {
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-          })
+          .then(response => response.json())
           .then(data => {
-            console.log("Données JSON reçues :", data);
-
-            // Mise à jour des dés
-            diceContainer.innerHTML = "";
             data.dice.forEach((value, index) => {
-              const dieDiv = document.createElement("div");
-              dieDiv.classList.add("die", "m-2", "text-center", "border", "rounded", "p-3", "shadow-sm");
-              dieDiv.innerHTML = `<p class="fs-3">${value}</p>
-                <label>
-                  <input type="checkbox" class="keep-die" data-index="${index}" ${
-                    data.kept_dice.includes(index) ? "checked" : ""
-                  }> Garder
-                </label>`;
-              diceContainer.appendChild(dieDiv);
+              document.getElementById(`die-${index}`).textContent = value;
             });
-
-            // Mise à jour du compteur de lancers
             rollCount.textContent = 3 - data.roll_count;
 
-            // Gestion des boutons
             if (data.roll_count === 0) {
-              console.log("Activation du bouton 'Joueur suivant'.");
-              rollDiceButton.disabled = true;
-              nextPlayerButton.disabled = false;
-            } else {
-              rollDiceButton.disabled = false;
-              nextPlayerButton.disabled = true;
+              const scoreModal = new bootstrap.Modal(document.getElementById("scoreModal"));
+              scoreModal.show();
             }
-          })
-          .catch(error => {
-            console.error("Erreur lors de la requête :", error);
-            alert("Une erreur s'est produite lors du lancement des dés. Veuillez réessayer.");
           });
       });
 
-nextPlayerButton.addEventListener("click", () => {
-  console.log("Bouton 'Joueur suivant' cliqué.");
+      document.getElementById("submit-score").addEventListener("click", () => {
+        const selectedScore = document.querySelector('input[name="score"]:checked');
+        if (!selectedScore) {
+          alert("Veuillez sélectionner une combinaison.");
+          return;
+        }
 
-  fetch("<%= next_player_game_path(@game.id) %>", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRF-Token": document.querySelector("[name='csrf-token']").content
-    },
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(data => {
-      console.log("Changement de joueur :", data.current_player_name);
+        fetch("<%= save_score_game_path(@game.id) %>", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-Token": document.querySelector("[name='csrf-token']").content
+          },
+          body: JSON.stringify({ combination: selectedScore.value })
+        }).then(response => {
+          if (!response.ok) {
+            throw new Error("Erreur lors de l'enregistrement du score.");
+          }
+          const scoreModal = bootstrap.Modal.getInstance(document.getElementById("scoreModal"));
+          scoreModal.hide();
+          nextPlayerButton.disabled = false;
+        });
+      });
 
-      // Met à jour le nom du joueur actuel
-      currentPlayer.textContent = data.current_player_name;
-
-      // Réinitialise les boutons et compteurs
-      rollDiceButton.disabled = false;
-      nextPlayerButton.disabled = true;
-      rollCount.textContent = 3;
-    })
-    .catch(error => {
-      console.error("Erreur lors de la requête :", error);
-      alert("Une erreur s'est produite lors du changement de joueur.");
+      nextPlayerButton.addEventListener("click", () => {
+        fetch("<%= next_player_game_path(@game.id) %>", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-Token": document.querySelector("[name='csrf-token']").content
+          },
+        }).then(response => response.json()).then(data => {
+          currentPlayer.textContent = data.current_player_name;
+          resetDiceToZero();
+          rollCount.textContent = 3;
+        });
+      });
     });
-});
-
-});
   </script>
 </body>
 </html>

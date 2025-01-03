@@ -1,11 +1,7 @@
 Rails.application.routes.draw do
-  # Page d'accueil
+  # Gestion du jeu
   root "games#home"
 
-  # Gestion des joueurs
-  resources :players, only: [:new, :create, :index]
-
-  # Gestion du jeu
   resources :games, only: [:new, :create, :show] do
     collection do
       get :tutorial   # Route pour afficher le tutoriel
@@ -15,6 +11,7 @@ Rails.application.routes.draw do
     member do
       post :roll_dice    # Action pour lancer les dés
       post :next_player  # Action pour passer au joueur suivant
+      post :save_score   # Action pour enregistrer le score
     end
   end
 end
