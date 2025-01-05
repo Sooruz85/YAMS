@@ -24,7 +24,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      background-color: rgba(255, 255, 255, 0.9); /* Couche blanche transparente */
+      background-color: rgba(255, 255, 255, 0.9);
       padding: 20px;
       border-radius: 15px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
@@ -61,7 +61,7 @@
     </div>
 
     <!-- Buttons -->
-    <div id="button-container" class="text-center">
+    <div class="text-center">
       <button id="roll-dice" class="btn btn-primary btn-lg me-3">Lancer les dés</button>
       <button id="next-player" class="btn btn-success btn-lg" disabled>Joueur suivant</button>
     </div>
@@ -103,28 +103,23 @@
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Back to Home -->
-    <div class="text-center mt-4">
-      <%= link_to "Retour à l'accueil", root_path, class: "btn btn-link" %>
-    </div>
+  <!-- Back to Home -->
+  <div class="text-center mt-4">
+    <%= link_to "Retour à l'accueil", root_path, class: "btn btn-link" %>
   </div>
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const rollDiceButton = document.getElementById("roll-dice");
       const nextPlayerButton = document.getElementById("next-player");
-      const diceContainer = document.getElementById("dice-container");
       const currentPlayer = document.getElementById("current-player");
       const rollCount = document.getElementById("roll-count");
 
       function resetDiceToZero() {
-        Array.from(document.querySelectorAll(".die p")).forEach(die => {
-          die.textContent = "0";
-        });
-        document.querySelectorAll(".keep-die").forEach(checkbox => {
-          checkbox.checked = false;
-        });
+        document.querySelectorAll(".die p").forEach(die => die.textContent = "0");
+        document.querySelectorAll(".keep-die").forEach(checkbox => checkbox.checked = false);
       }
 
       rollDiceButton.addEventListener("click", () => {
@@ -139,18 +134,15 @@
           },
           body: JSON.stringify({ kept_dice: keptDiceIndices })
         })
-          .then(response => response.json())
-          .then(data => {
-            data.dice.forEach((value, index) => {
-              document.getElementById(`die-${index}`).textContent = value;
-            });
-            rollCount.textContent = 3 - data.roll_count;
+        .then(response => response.json())
+        .then(data => {
+          data.dice.forEach((value, index) => document.getElementById(`die-${index}`).textContent = value);
+          rollCount.textContent = 3 - data.roll_count;
 
-            if (data.roll_count === 0) {
-              const scoreModal = new bootstrap.Modal(document.getElementById("scoreModal"));
-              scoreModal.show();
-            }
-          });
+          if (data.roll_count === 0) {
+            new bootstrap.Modal(document.getElementById("scoreModal")).show();
+          }
+        });
       });
 
       document.getElementById("submit-score").addEventListener("click", () => {
@@ -168,11 +160,8 @@
           },
           body: JSON.stringify({ combination: selectedScore.value })
         }).then(response => {
-          if (!response.ok) {
-            throw new Error("Erreur lors de l'enregistrement du score.");
-          }
-          const scoreModal = bootstrap.Modal.getInstance(document.getElementById("scoreModal"));
-          scoreModal.hide();
+          if (!response.ok) throw new Error("Erreur lors de l'enregistrement du score.");
+          bootstrap.Modal.getInstance(document.getElementById("scoreModal")).hide();
           nextPlayerButton.disabled = false;
         });
       });
@@ -182,12 +171,24 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-CSRF-Token": document.querySelector("[name='csrf-token']").content
+            "X-CSRF-Token": document.querySelector("[name='csrf-token']").content,
           },
-        }).then(response => response.json()).then(data => {
+        })
+        .then(response => response.json())
+        .then(data => {
           currentPlayer.textContent = data.current_player_name;
           resetDiceToZero();
           rollCount.textContent = 3;
+
+          // Réactive le bouton "Lancer les dés"
+          rollDiceButton.disabled = false;
+
+          // Désactive le bouton "Joueur suivant"
+          nextPlayerButton.disabled = true;
+        })
+        .catch(error => {
+          console.error(error);
+          alert("Erreur lors du changement de joueur.");
         });
       });
     });

@@ -1,6 +1,6 @@
 class Game < ApplicationRecord
   serialize :used_combinations, JSON
-  has_many :players
+  has_many :players, dependent: :destroy
 
   # Initialisation par défaut des combinaisons utilisées
   after_initialize :initialize_used_combinations
@@ -12,7 +12,7 @@ class Game < ApplicationRecord
   def current_player_index
     return nil unless current_player_id
 
-    players.find_index { |player| player.id == current_player_id }
+    players.index { |player| player.id == current_player_id }
   end
 
   # Retourne le compteur de lancers (par défaut à 0 si non défini)
@@ -52,6 +52,8 @@ class Game < ApplicationRecord
 
   # Définit le premier joueur comme joueur actuel
   def set_initial_player
-    update(current_player_id: players.first.id) if players.any?
+    return unless players.any?
+
+    update(current_player_id: players.first.id)
   end
 end
